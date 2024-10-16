@@ -119,6 +119,13 @@
             font-size: 14px;
             text-align: center;
         }
+        .instructions {
+            background-color: #e1e8ff;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -171,18 +178,23 @@
             
             <div class="card">
                 <h3><i class="fas fa-question-circle icon"></i>Analysis Prompt</h3>
-                <select id="analysisPrompt">
-                    <option value="none">I'll type my own</option>
-                    <option value="selfInsight">Reveal something about me</option>
-                    <option value="trends">Spot interaction patterns</option>
-                    <option value="interests">Identify my interests</option>
-                </select>
+                <select id="analysisPrompt"></select>
             </div>
             
             <div class="card">
                 <h3><i class="fas fa-magic icon"></i>Time Travel!</h3>
                 <button onclick="extractHistory()">Extract History</button>
                 <button onclick="copyToClipboard()">Copy to Clipboard</button>
+            </div>
+            
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle icon"></i>How to Use</h3>
+                <ol>
+                    <li>Click "Extract History" to generate your chat history</li>
+                    <li>Use "Copy to Clipboard" to copy the generated text</li>
+                    <li>Paste into chat.openai.com</li>
+                    <li>Ask ChatGPT to analyze or ask your own questions!</li>
+                </ol>
             </div>
             
             <div class="privacy-note">
@@ -199,6 +211,36 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <script>
+        const analysisPrompts = [
+            { value: "none", text: "I'll type my own" },
+            { value: "selfInsight", text: "Reveal something about me", prompt: "From all these interactions, what is one thing that you can tell me about myself that I may not know about myself?" },
+            { value: "trends", text: "Spot interaction patterns", prompt: "What are the main trends or patterns you observe in my interactions?" },
+            { value: "interests", text: "Identify my primary interests", prompt: "Based on our conversations, what seem to be my primary interests or areas of focus?" },
+            { value: "vocabulary", text: "Analyze my vocabulary", prompt: "Analyze my vocabulary and language style. What does it reveal about me?" },
+            { value: "timeTravel", text: "Message to past self", prompt: "If you could send a message to my past self based on these conversations, what would it be?" },
+            { value: "aiImpression", text: "Describe me to another AI", prompt: "If you were to describe me to another AI, what would you say?" },
+            { value: "quirks", text: "Identify my quirks", prompt: "What are my most endearing (or annoying) quirks based on our chats?" },
+            { value: "secretTalent", text: "Guess my hidden talent", prompt: "Based on our interactions, what hidden talent might I have that I'm not aware of?" },
+            { value: "alternate", text: "Suggest alternate career", prompt: "In an alternate universe, what career would you suggest for me based on these conversations?" },
+            { value: "chatgptRelationship", text: "Our relationship in ChatGPT's diary", prompt: "Describe our relationship as if ChatGPT were writing in a diary." },
+            { value: "memePersona", text: "My chat history as a meme", prompt: "If my chat history were a meme, what would it be?" },
+            { value: "cocktail", text: "My conversation style as a cocktail", prompt: "If my conversation style were a cocktail, what would be in it?" },
+            { value: "growthAreas", text: "Suggest areas for personal growth", prompt: "What areas of personal growth do you think I should focus on?" },
+            { value: "mbti", text: "Guess my MBTI", prompt: "Based on our interactions, what do you think my MBTI (Myers-Briggs Type Indicator) might be? Explain your reasoning." },
+            { value: "communicationStyle", text: "Critique my communication style", prompt: "Analyze and critique my communication style based on our conversations. What are my strengths and areas for improvement?" },
+            { value: "animal", text: "If I were an animal", prompt: "If I were an animal, what kind of animal would I be based on our interactions? Explain why." },
+            { value: "careerPaths", text: "Suggest career paths", prompt: "Based on our conversations and my apparent interests and skills, what possible career paths would you suggest for me?" }
+        ];
+
+        // Populate analysis prompt dropdown
+        const analysisPromptSelect = document.getElementById('analysisPrompt');
+        analysisPrompts.forEach(prompt => {
+            const option = document.createElement('option');
+            option.value = prompt.value;
+            option.textContent = prompt.text;
+            analysisPromptSelect.appendChild(option);
+        });
+
         let globalConversations = [];
 
         async function handleZipFile() {
@@ -329,17 +371,10 @@
             // Add explanatory introduction based on extraction type and analysis prompt
             const analysisPrompt = document.getElementById('analysisPrompt').value;
             if (analysisPrompt !== 'none') {
-                result += '\n\n========== ANALYSIS PROMPT ==========\n\n';
-                switch (analysisPrompt) {
-                    case 'selfInsight':
-                        result += "From all these interactions, what is one thing that you can tell me about myself that I may not know about myself?";
-                        break;
-                    case 'trends':
-                        result += "What are the main trends or patterns you observe in my interactions?";
-                        break;
-                    case 'interests':
-                        result += "Based on our conversations, what seem to be my primary interests or areas of focus?";
-                        break;
+                const selectedPrompt = analysisPrompts.find(p => p.value === analysisPrompt);
+                if (selectedPrompt) {
+                    result += '\n\n========== ANALYSIS PROMPT ==========\n\n';
+                    result += selectedPrompt.prompt;
                 }
             }
 
