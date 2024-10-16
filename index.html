@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Time Machine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f5ff;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .column {
+            flex: 1;
+        }
+        .right-column {
+            display: flex;
+            flex-direction: column;
+        }
+        #output {
+            flex-grow: 1;
+            margin-bottom: 15px;
+        }
+        #stats, #warning {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #warning {
+            color: #ff4136;
+            font-weight: bold;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #4a4a4a;
+        }
+        textarea {
+            width: 100%;
+            height: 400px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-family: 'Roboto', sans-serif;
+        }
+        select, input[type="month"], input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        #stats, #warning {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        #warning {
+            color: #ff4136;
+        }
+        .icon {
+            margin-right: 10px;
+        }
+        .download-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .download-step {
+            background-color: #e1e8ff;
+            border-radius: 5px;
+            padding: 10px;
+            flex: 1;
+            margin-right: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .download-step:last-child {
+            margin-right: 0;
+        }
+        .privacy-note {
+            background-color: #e1e8ff;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1><i class="fas fa-time-machine icon"></i>ChatGPT Time Machine</h1>
+    
+    <div class="download-steps">
+        <div class="download-step">
+            <i class="fas fa-sign-in-alt"></i><br>
+            Log in to chat.openai.com
+        </div>
+        <div class="download-step">
+            <i class="fas fa-cog"></i><br>
+            Settings → Data controls
+        </div>
+        <div class="download-step">
+            <i class="fas fa-file-export"></i><br>
+            Click 'Export data'
+        </div>
+        <div class="download-step">
+            <i class="fas fa-envelope"></i><br>
+            Wait for email
+        </div>
+        <div class="download-step">
+            <i class="fas fa-file-archive"></i><br>
+            Download zip file
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="column">
+            <div class="card">
+                <h3><i class="fas fa-file-upload icon"></i>Upload Your Data</h3>
+                <input type="file" id="zipFile" accept=".zip" onchange="handleZipFile()">
+            </div>
+            
+            <div class="card">
+                <h3><i class="fas fa-calendar-alt icon"></i>Choose Date Range</h3>
+                <input type="month" id="startDate" onchange="updateEndDateMin()">
+                <input type="month" id="endDate">
+            </div>
+            
+            <div class="card">
+                <h3><i class="fas fa-filter icon"></i>Extract</h3>
+                <select id="extractionType">
+                    <option value="allPrompts">All my prompts</option>
+                    <option value="allConversations">All conversations</option>
+                    <option value="firstExchange">First exchange</option>
+                </select>
+            </div>
+            
+            <div class="card">
+                <h3><i class="fas fa-question-circle icon"></i>Analysis Prompt</h3>
+                <select id="analysisPrompt">
+                    <option value="none">I'll type my own</option>
+                    <option value="selfInsight">Reveal something about me</option>
+                    <option value="trends">Spot interaction patterns</option>
+                    <option value="interests">Identify my interests</option>
+                </select>
+            </div>
+            
+            <div class="card">
+                <h3><i class="fas fa-magic icon"></i>Time Travel!</h3>
+                <button onclick="extractHistory()">Extract History</button>
+                <button onclick="copyToClipboard()">Copy to Clipboard</button>
+            </div>
+            
+            <div class="privacy-note">
+                <i class="fas fa-lock icon"></i> Your data stays in your browser. Nothing is uploaded or stored elsewhere.
+            </div>
+        </div>
+        
+        <div class="column right-column">
+            <textarea id="output" readonly placeholder="Your extracted history will appear here..."></textarea>
+            <div id="stats"></div>
+            <div id="warning"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script>
+        let globalConversations = [];
+
+        async function handleZipFile() {
+            const zipFile = document.getElementById('zipFile').files[0];
+            if (!zipFile) return;
+
+            try {
+                const zip = await JSZip.loadAsync(zipFile);
+                const conversationsFile = zip.file('conversations.json');
+                if (!conversationsFile) {
+                    throw new Error('conversations.json not found in the zip file');
+                }
+
+                const conversationsJson = await conversationsFile.async('text');
+                globalConversations = JSON.parse(conversationsJson);
+
+                // Sort conversations by date
+                globalConversations.sort((a, b) => a.create_time - b.create_time);
+
+                // Set date range
+                if (globalConversations.length > 0) {
+                    const startDate = new Date(globalConversations[0].create_time * 1000);
+                    const endDate = new Date(Math.min(
+                        globalConversations[globalConversations.length - 1].create_time * 1000,
+                        Date.now()
+                    ));
+                    const startDateInput = document.getElementById('startDate');
+                    const endDateInput = document.getElementById('endDate');
+                    
+                    // Set max date for both inputs
+                    const maxDate = endDate.toISOString().slice(0, 7);
+                    startDateInput.max = maxDate;
+                    endDateInput.max = maxDate;
+                    
+                    // Set end date to the most recent date
+                    endDateInput.value = maxDate;
+                    
+                    // Set start date to 3 months before end date, or the earliest date available
+                    let threeMonthsAgo = new Date(endDate);
+                    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+                    if (threeMonthsAgo < startDate) {
+                        startDateInput.value = startDate.toISOString().slice(0, 7);
+                    } else {
+                        startDateInput.value = threeMonthsAgo.toISOString().slice(0, 7);
+                    }
+                    
+                    updateEndDateMin();
+                }
+            } catch (error) {
+                document.getElementById('warning').innerText = 'Error processing zip file: ' + error.message;
+            }
+        }
+
+        function updateEndDateMin() {
+            const startDate = document.getElementById('startDate').value;
+            document.getElementById('endDate').min = startDate;
+        }
+
+        function extractHistory() {
+            if (globalConversations.length === 0) {
+                document.getElementById('warning').innerText = 'Please select a zip file first';
+                return;
+            }
+
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(document.getElementById('endDate').value);
+            endDate.setMonth(endDate.getMonth() + 1); // Include the entire month
+            const extractionType = document.getElementById('extractionType').value;
+
+            let result = '';
+            let totalConversations = 0;
+            let totalPrompts = 0;
+
+            for (const conversation of globalConversations) {
+                const createTime = new Date(conversation.create_time * 1000);
+                if (createTime >= startDate && createTime < endDate) {
+                    
+                    const messages = Object.values(conversation.mapping)
+                        .filter(msg => msg.message && getMessageContent(msg.message).trim() !== '')
+                        .sort((a, b) => a.message.create_time - b.message.create_time);
+
+                    // Skip conversations with no data
+                    if (messages.length === 0) continue;
+
+                    let conversationResult = `--- ${formatDate(createTime)}:\n`;
+                    let conversationPrompts = 0;
+
+                    switch (extractionType) {
+                        case 'allPrompts':
+                            for (const msg of messages) {
+                                if (msg.message.author.role === 'user') {
+                                    conversationResult += `User: ${getMessageContent(msg.message)}\n\n`;
+                                    conversationPrompts++;
+                                }
+                            }
+                            break;
+                        case 'allConversations':
+                            for (const msg of messages) {
+                                const role = msg.message.author.role === 'user' ? 'User' : 'Assistant';
+                                conversationResult += `${role}: ${getMessageContent(msg.message)}\n\n`;
+                                if (role === 'User') conversationPrompts++;
+                            }
+                            break;
+                        case 'firstExchange':
+                            if (messages.length > 0) {
+                                conversationResult += `User: ${getMessageContent(messages[0].message)}\n\n`;
+                                conversationPrompts++;
+                                if (messages.length > 1) {
+                                    conversationResult += `Assistant: ${getMessageContent(messages[1].message)}\n\n`;
+                                    if (messages.length > 2) {
+                                        conversationResult += `User: ${getMessageContent(messages[2].message)}\n\n`;
+                                        conversationPrompts++;
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                    
+                    // Only add conversation if it has content
+                    if (conversationPrompts > 0) {
+                        result += conversationResult + '\n';
+                        totalConversations++;
+                        totalPrompts += conversationPrompts;
+                    }
+                }
+            }
+
+            // Add explanatory introduction based on extraction type and analysis prompt
+            const analysisPrompt = document.getElementById('analysisPrompt').value;
+            if (analysisPrompt !== 'none') {
+                result += '\n\n========== ANALYSIS PROMPT ==========\n\n';
+                switch (analysisPrompt) {
+                    case 'selfInsight':
+                        result += "From all these interactions, what is one thing that you can tell me about myself that I may not know about myself?";
+                        break;
+                    case 'trends':
+                        result += "What are the main trends or patterns you observe in my interactions?";
+                        break;
+                    case 'interests':
+                        result += "Based on our conversations, what seem to be my primary interests or areas of focus?";
+                        break;
+                }
+            }
+
+            document.getElementById('output').value = result.trim();
+            
+            // Calculate total size in KB
+            const totalSizeKB = (new Blob([result]).size / 1024).toFixed(2);
+            
+            // Display stats
+            const avgPrompts = totalPrompts / totalConversations;
+            const stats = `
+                Total conversations: ${totalConversations}
+                Total prompts: ${totalPrompts}
+                Average prompts per conversation: ${avgPrompts.toFixed(2)}
+                Total size of generated text: ${totalSizeKB} KB
+            `;
+            document.getElementById('stats').innerText = stats;
+
+            // Add warning for potentially oversized output
+            const warningThresholdKB = 50; // Adjust this value as needed
+            if (totalSizeKB > warningThresholdKB) {
+                document.getElementById('warning').innerText = `Warning: The generated text (${totalSizeKB} KB) may be too large for ChatGPT. Consider reducing the date range or changing the extraction type.`;
+            } else {
+                document.getElementById('warning').innerText = '';
+            }
+        }
+
+        function getMessageContent(message) {
+            const content = message.content;
+            let text = '';
+            if (typeof content === 'object' && content.content_type === 'text') {
+                text = content.parts.join('');
+            } else if (typeof content === 'string') {
+                text = content;
+            }
+
+            // Handle image uploads
+            if (message.metadata && message.metadata.attachments) {
+                for (const attachment of message.metadata.attachments) {
+                    text += `[Skipped Image: ${attachment.name}]\n`;
+                }
+            }
+
+            // Abbreviate long messages
+            if (text.length > 1000) {
+                text = text.slice(0, 1000) + ' [...]';
+            }
+
+            return text;
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('output');
+            output.select();
+            document.execCommand('copy');
+            document.getElementById('warning').innerText = 'Copied to clipboard!';
+        }
+
+        function formatDate(date) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+    </script>
+</body>
+</html>
